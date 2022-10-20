@@ -59,7 +59,7 @@ export type Props<T> = Omit<
   /** Custom UI component for footer indicator of FlatList. Only used when `showDefaultLoadingIndicators` is false */
   ListFooterComponent?: React.ComponentType;
   isDataChanged?:boolean;
-  setDataChanged: () => void;
+  setDataChanged: (paramOption: boolean) => void;
   
 };
 /**
