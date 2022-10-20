@@ -58,6 +58,9 @@ export type Props<T> = Omit<
   ListHeaderComponent?: React.ComponentType;
   /** Custom UI component for footer indicator of FlatList. Only used when `showDefaultLoadingIndicators` is false */
   ListFooterComponent?: React.ComponentType;
+  isDataChanged?:boolean;
+  setDataChanged: () => void;
+  
 };
 /**
  * Note:
@@ -93,6 +96,8 @@ export const BidirectionalFlatList = (React.forwardRef(
       onStartReachedThreshold = 10,
       showDefaultLoadingIndicators = true,
     } = props;
+    let isDataChanged = props.isDataChanged;
+    //console.log("Component isDataChanged:",isDataChanged);
     const [onStartReachedInProgress, setOnStartReachedInProgress] = useState(
       false
     );
@@ -104,9 +109,26 @@ export const BidirectionalFlatList = (React.forwardRef(
     const onStartReachedInPromise = useRef<Promise<void> | null>(null);
     const onEndReachedInPromise = useRef<Promise<void> | null>(null);
 
+    
+    const refreshTrackers = ()=>{
+      onEndReachedTracker.current={};
+      onStartReachedTracker.current={};
+    }
+
     const maybeCallOnStartReached = () => {
+      //console.log("maybeCallOnStartReached, data?.length:",data?.length);
       // If onStartReached has already been called for given data length, then ignore.
+      if(isDataChanged && props.setDataChanged != null)
+      {
+        //console.log("maybeCallOnStartReached > isDataChanged,",isDataChanged);
+        refreshTrackers();
+        isDataChanged = false;
+        props.setDataChanged(false);
+        //console.log("maybeCallOnEndReached, onStartReachedTracker after clearing cache:",onStartReachedTracker.current);
+      }
+
       if (data?.length && onStartReachedTracker.current[data.length]) {
+        //console.log("maybeCallOnStartReached, onStartReachedTracker.current:",onStartReachedTracker.current);
         return;
       }
 
@@ -131,13 +153,25 @@ export const BidirectionalFlatList = (React.forwardRef(
         onStartReachedInPromise.current = onStartReached().then(p);
       }
     };
-
+    
     const maybeCallOnEndReached = () => {
+      //console.log("maybeCallOnEndReached, data?.length:",data?.length);
+      //console.log("maybeCallOnEndReached, onEndReachedTracker.current[data.length]:",onEndReachedTracker.current[data.length]);
       // If onEndReached has already been called for given data length, then ignore.
+
+      if(isDataChanged && props.setDataChanged != null)
+      {
+        //console.log("maybeCallOnEndReached > isDataChanged,",isDataChanged);
+        refreshTrackers();
+        isDataChanged = false;
+        props.setDataChanged(false);
+        //console.log("maybeCallOnEndReached, onEndReachedTracker after clearing cache:",onEndReachedTracker.current);
+      }
       if (data?.length && onEndReachedTracker.current[data.length]) {
+        //console.log("maybeCallOnEndReached, onEndReachedTracker.current:",onEndReachedTracker.current);
         return;
       }
-
+      
       if (data?.length) {
         onEndReachedTracker.current[data.length] = true;
       }
@@ -251,4 +285,3 @@ export const BidirectionalFlatList = (React.forwardRef(
 type BidirectionalFlatListType = <T extends any>(
   props: Props<T>
 ) => React.ReactElement;
-//testing
